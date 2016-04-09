@@ -9,7 +9,10 @@ Motivated by *clugh*, *Ultrapowa* & *FICTURE7*
 
 ## Installation
 
-Open ClashRoyaleProxy.sln with your preferred C# IDE, compile it, make sure **all** NuGet packages are installed, run it.
+Open ClashRoyaleProxy.sln with your preferred C# IDE, compile it, make sure all NuGet packages are installed.
+Download [this](http://www.file-upload.net/download-11469803/modded_clash_royale.apk.html) APK file and install it on your rooted android device.
+Connect to the official servers first, this step is required in order to get the latest patch files.
+Run & connect to the proxy.
 
 ## Proof of Concept
 
