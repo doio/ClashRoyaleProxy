@@ -1,0 +1,6 @@
+﻿--> ToDo List <--
+
+-Custom configuration file (clashroyaleproxy.cfg)
+-Hexadecimal packet logging
+-Windows Forms GUI
+-.. to be continued
