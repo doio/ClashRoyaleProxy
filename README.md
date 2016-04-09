@@ -7,6 +7,10 @@ A proxy en/decrypting Clash Royale traffic.
 
 Motivated by *clugh*, *Ultrapowa* & *FICTURE7*
 
+## Contact
+
+![alt text](https://cdn3.iconfinder.com/data/icons/free-social-icons/67/skype_circle_color-48.png "Contact me on skype") : julianzzxd
+![alt text](https://cdn1.iconfinder.com/data/icons/flat-and-simple-part-1/128/twitter-48.png "Contact me on twitter") : JulienInDaHood
 ## Installation
 
 Open ClashRoyaleProxy.sln with your preferred C# IDE, compile it, make sure all NuGet packages are installed.
