@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Sodium;
 using Blake2Sharp;
 
 namespace ClashRoyaleProxy
 {
     class EnDecrypt
     {
-        private static KeyPair ClientKeyPair = PublicKeyBox.GenerateKeyPair();
+        private static KeyPair ClientKeyPair = new KeyPair();
         private static byte[] PKLogin { get; set; }
         private static byte[] SessionKeyLogin { get; set; }
         private static byte[] NonceLogin { get; set; }
@@ -35,27 +34,38 @@ namespace ClashRoyaleProxy
                 else if (p.ID == 10101)
                 {
                     // LoginPacket
-                    byte[] nonce = GenericHash.Hash(ClientKeyPair.PublicKey.Concat(Keys.OriginalPublicKey).ToArray(), null, 24);
+                    var blake2b = Blake2B.Create(new Blake2BConfig() { OutputSizeInBytes = 24 });
+                    blake2b.Init();
+                    blake2b.Update(ClientKeyPair.PublicKey);
+                    blake2b.Update(Keys.OriginalPublicKey);
+                    byte[] nonce = blake2b.Finish();
+
                     decrypted = SessionKeyLogin.Concat(NonceLogin).Concat(decrypted).ToArray();
-                    encrypted = PublicKeyBox.Create(decrypted, nonce, ClientKeyPair.PrivateKey, Keys.OriginalPublicKey);
+                    encrypted = CustomNaCl.CreatePublicBox(decrypted, nonce, ClientKeyPair.SecretKey, Keys.OriginalPublicKey);
                     encrypted = ClientKeyPair.PublicKey.Concat(encrypted).ToArray();
                 }
                 else if (p.ID == 20103 || p.ID == 20104)
                 {
                     // LoginOk / LoginFailed
-                    byte[] nonce = GenericHash.Hash(NonceLogin.Concat(PKLogin).Concat(Keys.ModdedPublicKey).ToArray(), null, 24);
+                    var blake2b = Blake2B.Create(new Blake2BConfig() { OutputSizeInBytes = 24 });
+                    blake2b.Init();
+                    blake2b.Update(NonceLogin);
+                    blake2b.Update(PKLogin);
+                    blake2b.Update(Keys.ModdedPublicKey);
+                    byte[] nonce = blake2b.Finish();
+
                     decrypted = NonceLoginOkFailed.Concat(SharedKeyLoginOkFailed).Concat(decrypted).ToArray();
-                    encrypted = PublicKeyBox.Create(decrypted, nonce, Keys.GeneratedPrivateKey, PKLogin);
+                    encrypted = CustomNaCl.CreatePublicBox(decrypted, nonce, Keys.GeneratedPrivateKey, PKLogin);
                 }
                 else
                 {
                     if (p.Destination == DataDestination.DATA_FROM_SERVER)
                     {
-                        encrypted = SecretBox.Create(decrypted, NonceLoginOkFailed, SharedKeyLoginOkFailed).Skip(16).ToArray();
+                        encrypted = CustomNaCl.CreateSecretBox(decrypted, NonceLoginOkFailed, SharedKeyLoginOkFailed).Skip(16).ToArray();
                     }
                     else
                     {
-                        encrypted = SecretBox.Create(decrypted, NonceLogin, SharedKeyLoginOkFailed).Skip(16).ToArray();
+                        encrypted = CustomNaCl.CreateSecretBox(decrypted, NonceLogin, SharedKeyLoginOkFailed).Skip(16).ToArray();
                     }
                 }
                 return encrypted;
@@ -86,17 +96,29 @@ namespace ClashRoyaleProxy
                 {
                     // LoginPacket
                     PKLogin = encrypted.Take(32).ToArray();
-                    byte[] nonce = GenericHash.Hash(PKLogin.Concat(Keys.ModdedPublicKey).ToArray(), null, 24);
+                    var blake2b = Blake2B.Create(new Blake2BConfig() { OutputSizeInBytes = 24 });
+                    blake2b.Init();
+                    blake2b.Update(PKLogin);
+                    blake2b.Update(Keys.ModdedPublicKey);
+                    byte[] nonce = blake2b.Finish();
+
                     encrypted = encrypted.Skip(32).ToArray();
-                    decrypted = PublicKeyBox.Open(encrypted, nonce, Keys.GeneratedPrivateKey, PKLogin);
+                    decrypted = CustomNaCl.OpenPublicBox(encrypted, nonce, Keys.GeneratedPrivateKey, PKLogin);
                     SessionKeyLogin = decrypted.Take(24).ToArray();
                     NonceLogin = decrypted.Skip(24).Take(24).ToArray();
                     decrypted = decrypted.Skip(48).ToArray();
                 }
                 else if (p.ID == 20103 || p.ID == 20104)
                 {
-                    byte[] nonce = GenericHash.Hash(NonceLogin.Concat(ClientKeyPair.PublicKey).Concat(Keys.OriginalPublicKey).ToArray(), null, 24);
-                    decrypted = PublicKeyBox.Open(encrypted, nonce, ClientKeyPair.PrivateKey, Keys.OriginalPublicKey);
+                    // LoginFailed / LoginOk
+                    var blake2b = Blake2B.Create(new Blake2BConfig() { OutputSizeInBytes = 24 });
+                    blake2b.Init();
+                    blake2b.Update(NonceLogin);
+                    blake2b.Update(ClientKeyPair.PublicKey);
+                    blake2b.Update(Keys.OriginalPublicKey);
+                    byte[] nonce = blake2b.Finish();
+
+                    decrypted = CustomNaCl.OpenPublicBox(encrypted, nonce, ClientKeyPair.SecretKey, Keys.OriginalPublicKey);
                     NonceLoginOkFailed = decrypted.Take(24).ToArray();
                     SharedKeyLoginOkFailed = decrypted.Skip(24).Take(32).ToArray();
                     decrypted = decrypted.Skip(56).ToArray();
@@ -105,13 +127,13 @@ namespace ClashRoyaleProxy
                 {
                     if (p.Destination == DataDestination.DATA_FROM_SERVER)
                     {
-                        NonceLoginOkFailed = Utilities.Increment(Utilities.Increment(NonceLoginOkFailed));
-                        decrypted = SecretBox.Open(new byte[16].Concat(encrypted).ToArray(), NonceLoginOkFailed, SharedKeyLoginOkFailed);
+                        CustomNaCl.NonceIncr(NonceLoginOkFailed);
+                        decrypted = CustomNaCl.OpenSecretBox(new byte[16].Concat(encrypted).ToArray(), NonceLoginOkFailed, SharedKeyLoginOkFailed);
                     }
                     else
                     {
-                        NonceLogin = Utilities.Increment(Utilities.Increment(NonceLogin));
-                        decrypted = SecretBox.Open(new byte[16].Concat(encrypted).ToArray(), NonceLogin, SharedKeyLoginOkFailed);
+                        CustomNaCl.NonceIncr(NonceLogin);
+                        decrypted = CustomNaCl.OpenSecretBox(new byte[16].Concat(encrypted).ToArray(), NonceLogin, SharedKeyLoginOkFailed);
                     }
                 }
                 return decrypted;
@@ -121,7 +143,6 @@ namespace ClashRoyaleProxy
                 Logger.Log("Failed to decrypt packet " + p.ID + " (" + ex.GetType() + ")..", LogType.EXCEPTION);
             }
             return null;
-        
-    }
+        }
     }
 }

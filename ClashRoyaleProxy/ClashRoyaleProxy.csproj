@@ -61,10 +61,6 @@
     <NoWin32Manifest>true</NoWin32Manifest>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Sodium, Version=0.9.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\libsodium-net.0.9.0\lib\Net40\Sodium.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -75,6 +71,8 @@
   <ItemGroup>
     <Compile Include="Crypto\EnDecrypt.cs" />
     <Compile Include="Crypto\Keys.cs" />
+    <Compile Include="External\TweetNaCl\Nonce.cs" />
+    <Compile Include="External\TweetNaCl\SecretBox.cs" />
     <Compile Include="External\Blake2b\Blake2B.cs" />
     <Compile Include="External\Blake2b\Blake2BConfig.cs" />
     <Compile Include="External\Blake2b\Blake2BCore-FullyUnrolled.cs" />
@@ -88,7 +86,7 @@
     <Compile Include="External\Blake2b\Hasher.cs" />
     <Compile Include="External\Blake2b\NodeHasher.cs" />
     <Compile Include="External\Blake2b\TreeHasher.cs" />
-    <Compile Include="Crypto\CustomNaCl.cs" />
+    <Compile Include="External\TweetNaCl\CustomNaCl.cs" />
     <Compile Include="External\LZMA\Common\CommandLineParser.cs" />
     <Compile Include="External\LZMA\Common\CRC.cs" />
     <Compile Include="External\LZMA\Common\InBuffer.cs" />
@@ -106,7 +104,16 @@
     <Compile Include="External\LZMA\Compress\RangeCoder\RangeCoderBit.cs" />
     <Compile Include="External\LZMA\Compress\RangeCoder\RangeCoderBitTree.cs" />
     <Compile Include="External\LZMA\ICoder.cs" />
-    <Compile Include="External\TweetNaCl\TweetNacl.cs" />
+    <Compile Include="External\TweetNaCl\Classes\curve25519.cs" />
+    <Compile Include="External\TweetNaCl\Classes\curve25519xsalsa20poly1305.cs" />
+    <Compile Include="External\TweetNaCl\Classes\hsalsa20.cs" />
+    <Compile Include="External\TweetNaCl\Classes\poly1305.cs" />
+    <Compile Include="External\TweetNaCl\Classes\salsa20.cs" />
+    <Compile Include="External\TweetNaCl\Classes\verify_16.cs" />
+    <Compile Include="External\TweetNaCl\Classes\xsalsa20.cs" />
+    <Compile Include="External\TweetNaCl\Classes\xsalsa20poly1305.cs" />
+    <Compile Include="External\TweetNaCl\KeyPair.cs" />
+    <Compile Include="External\TweetNaCl\PublicBox.cs" />
     <Compile Include="Helper\Extensions.cs" />
     <Compile Include="Logger\Logger.cs" />
     <Compile Include="Logger\LogType.cs" />
@@ -158,7 +165,7 @@
   <Import Project="..\packages\Baseclass.Contrib.Nuget.Output.2.1.0\build\net40\Baseclass.Contrib.Nuget.Output.targets" Condition="Exists('..\packages\Baseclass.Contrib.Nuget.Output.2.1.0\build\net40\Baseclass.Contrib.Nuget.Output.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+      <ErrorText>Dieses Projekt verweist auf mindestens ein NuGet-Paket, das auf diesem Computer fehlt. Verwenden Sie die Wiederherstellung von NuGet-Paketen, um die fehlenden Dateien herunterzuladen. Weitere Informationen finden Sie unter "http://go.microsoft.com/fwlink/?LinkID=322105". Die fehlende Datei ist "{0}".</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\Baseclass.Contrib.Nuget.Output.2.1.0\build\net40\Baseclass.Contrib.Nuget.Output.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Baseclass.Contrib.Nuget.Output.2.1.0\build\net40\Baseclass.Contrib.Nuget.Output.targets'))" />
   </Target>

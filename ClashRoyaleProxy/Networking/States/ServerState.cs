@@ -1,10 +1,7 @@
-﻿using Sodium;
-
-namespace ClashRoyaleProxy
+﻿namespace ClashRoyaleProxy
 {
     public class ServerState : State
     {
-        public KeyPair serverKey;
         public byte[] clientKey, nonce, sessionKey, sharedKey;
     }
 }
