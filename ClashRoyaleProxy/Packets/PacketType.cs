@@ -18,6 +18,7 @@ namespace ClashRoyaleProxy
             { 10212, "NameChange" },
             { 10905, "RequestNews" },
             { 14102, "GameOpCommand" },
+            { 14113, "AskAvatarProfileData" },
             { 14124, "CancelMatchmaking" },   
             { 14312, "SendGlobalChatLine" },
             #endregion
@@ -30,12 +31,13 @@ namespace ClashRoyaleProxy
             { 24101, "OwnHomeData" },
             { 24104, "OutOfSync" },
             { 24111, "ChestLootData" },
+            { 24113, "AvatarProfileData" },
             { 24114, "HomeBattleReplay" },
             { 24115, "ServerError" },
             { 24124, "CancelMatchmakingDone" },
             { 24312, "GlobalChatLine" },
             { 24405, "TVRoyaleReplayData" },
-            { 24445, "NewsData" },                             
+            { 24445, "NewsData" },
             #endregion
         };
 
