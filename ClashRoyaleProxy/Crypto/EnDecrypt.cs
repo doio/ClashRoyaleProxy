@@ -11,31 +11,25 @@ namespace ClashRoyaleProxy
     class EnDecrypt
     {
         private static KeyPair ClientKeyPair = PublicKeyBox.GenerateKeyPair();
-        private static byte[] _20100_SessionKey { get; set; }
-
         private static byte[] PKLogin { get; set; }
         private static byte[] SessionKeyLogin { get; set; }
         private static byte[] NonceLogin { get; set; }
-
         private static byte[] NonceLoginOkFailed { get; set; }
         private static byte[] SharedKeyLoginOkFailed { get; set; }
 
-        public static byte[] EncryptPayload(Packet p)
+        /// <summary>
+        /// Encrypts a packet
+        /// </summary>
+        public static byte[] EncryptPacket(Packet p)
         {
             try
             {
                 byte[] decrypted = p.DecryptedPayload;
                 byte[] encrypted = null;
 
-                if (p.ID == 10100)
+                if (p.ID == 10100 || p.ID == 20100)
                 {
                     // SessionPacket
-                    return decrypted;
-                }
-                else if (p.ID == 20100)
-                {
-                    // SessionOkPacket
-                    _20100_SessionKey = decrypted.Take(24).ToArray();
                     return decrypted;
                 }
                 else if (p.ID == 10101)
@@ -65,7 +59,6 @@ namespace ClashRoyaleProxy
                     }
                 }
                 return encrypted;
-
             }
             catch (Exception ex)
             {
@@ -74,7 +67,10 @@ namespace ClashRoyaleProxy
             return null;
         }
 
-        public static byte[] DecryptPayload(Packet p)
+        /// <summary>
+        /// Decrypts a packet
+        /// </summary>
+        public static byte[] DecryptPacket(Packet p)
         {
             try
             {
@@ -125,6 +121,7 @@ namespace ClashRoyaleProxy
                 Logger.Log("Failed to decrypt packet " + p.ID + " (" + ex.GetType() + ")..", LogType.EXCEPTION);
             }
             return null;
-        }
+        
+    }
     }
 }

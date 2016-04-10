@@ -3,12 +3,37 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace ClashRoyaleProxy
 {
-    static class BinaryHelper
+    static class Extensions
     {
+        /// <summary>
+        /// Returns if a socket disconnected
+        /// </summary>
+        public static bool Disconnected(this Socket socket)
+        {
+            try
+            {
+                return (socket.Poll(1, SelectMode.SelectRead) && socket.Available == 0);
+            }
+            catch (SocketException)
+            {
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Returns if an object disposed by using the C++ sizeof()-like method
+        /// </summary>
+        public static bool Disposed(this object s)
+        {
+            return Marshal.SizeOf(s) > 0;
+        }
+
         // Add datatypes to a generic list of bytes
         public static void AddShort(this List<byte> list, short data)
         {
@@ -65,7 +90,7 @@ namespace ClashRoyaleProxy
             int lengthOfUTF8Str = br.ReadIntWithEndian();
             string UTF8Str;
 
-            if (lengthOfUTF8Str > -1)  
+            if (lengthOfUTF8Str > -1)
             {
                 if (lengthOfUTF8Str > 0)
                 {
@@ -111,7 +136,5 @@ namespace ClashRoyaleProxy
                 Array.Reverse(a64);
             return BitConverter.ToUInt64(a64, 0);
         }
-
-        
     }
 }

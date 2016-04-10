@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 
 namespace ClashRoyaleProxy
 {
-
     class Helper
     {
         /// <summary>

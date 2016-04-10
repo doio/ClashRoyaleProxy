@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ClashRoyaleProxy
 {
@@ -23,6 +17,9 @@ namespace ClashRoyaleProxy
             ClientSocket = s;
         }
 
+        /// <summary>
+        /// Enqueues the client
+        /// </summary>
         public void Enqueue()
         {
             // Connect to the official supercell server
@@ -31,26 +28,25 @@ namespace ClashRoyaleProxy
             IPEndPoint remoteEndPoint = new IPEndPoint(ipAddress, CRPort);
             ServerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             ServerSocket.Connect(remoteEndPoint);
+
+            // Start async recv/send procedure
             Logger.Log("Proxy attached to " + CRHost_ANDROID + " (" + ServerRemoteAdr + ")!", LogType.INFO);
             Logger.Log("Starting async recv/send threads..", LogType.INFO);
             new ReceiveSendThread(ClientSocket, ServerSocket);              
         }
-   
-        public Socket Socket_Client
-        {
-            get
-            {
-                return ClientSocket;
-            }
-        }
 
-        public Socket Socket_Server
+        /// <summary>
+        /// Dequeues the client
+        /// </summary>
+        public void Dequeue()
         {
-            get
-            {
-                return ServerSocket;
-            }
+            ClientSocket.Disconnect(false);
+            ServerSocket.Disconnect(false);
         }
+  
+        /// <summary>
+        /// Client IP-address
+        /// </summary>
         public IPAddress ClientRemoteAdr
         {
             get
@@ -59,6 +55,9 @@ namespace ClashRoyaleProxy
             }
         }
 
+        /// <summary>
+        /// Clash Royale Server IP-address
+        /// </summary>
         public IPAddress ServerRemoteAdr
         {
             get

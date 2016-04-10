@@ -2,29 +2,28 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 
 namespace ClashRoyaleProxy
 {
     class Proxy
     {
-        static List<Client> ClientPool = new List<Client>();
-        const int PORT = 9339;
-        const int MAX_CONNECTIONS = 100;
+        private static List<Client> ClientPool = new List<Client>();
+        private const int PORT = 9339;
+        private const int MAX_CONNECTIONS = 100;
 
         /// <summary>
-        /// Starts the actual proxy
+        /// Starts the proxy
         /// </summary>
         public static void Start()
         {
-            // Bind a new socket to 127.0.0.1 aka. localhost
+            // Bind a new socket to the local EP
             IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, PORT);
             Socket clientListener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             clientListener.Bind(endPoint);
             clientListener.Listen(MAX_CONNECTIONS);
             Logger.Log("Successfully bound socket to " + endPoint.Address + "!", LogType.INFO);
             Logger.Log("Listening for incoming connections..", LogType.INFO);
-            
+
             while (true)
             {
                 Socket clientSocket = clientListener.Accept();
@@ -36,5 +35,16 @@ namespace ClashRoyaleProxy
             }
         }
 
+        /// <summary>
+        /// Stops the proxy
+        /// </summary>
+        public static void Stop()
+        {
+            for (int i = 0; i < ClientPool.Count; i++)
+            {
+                ClientPool[i].Dequeue();
+            }
+            ClientPool.Clear();
+        }
     }
 }

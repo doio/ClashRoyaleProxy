@@ -6,12 +6,11 @@ using System.Text;
 
 namespace ClashRoyaleProxy
 {
-    // Helper class for my customized TweetNaCl classes
+    // Helper class for my customized TweetNaCl version
     class CustomNaCl
     {
         /// <summary>
         /// Increments the specified nonce.
-        /// https://github.com/jedisct1/libsodium/blob/master/src/libsodium/sodium/utils.c#L178
         /// </summary>
         public static void NonceIncr(byte[] nonce)
         {

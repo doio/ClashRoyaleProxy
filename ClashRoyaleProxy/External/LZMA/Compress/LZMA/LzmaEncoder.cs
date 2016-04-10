@@ -51,13 +51,13 @@ namespace SevenZip.Compression.LZMA
 		}
 
 		Base.State _state = new Base.State();
-		Byte _previousByte;
+		Byte _previoubyte;
 		UInt32[] _repDistances = new UInt32[Base.kNumRepDistances];
 
 		void BaseInit()
 		{
 			_state.Init();
-			_previousByte = 0;
+			_previoubyte = 0;
 			for (UInt32 i = 0; i < Base.kNumRepDistances; i++)
 				_repDistances[i] = 0;
 		}
@@ -606,7 +606,7 @@ namespace SevenZip.Compression.LZMA
 			UInt32 posState = (position & _posStateMask);
 
 			_optimum[1].Price = _isMatch[(_state.Index << Base.kNumPosStatesBitsMax) + posState].GetPrice0() +
-					_literalEncoder.GetSubCoder(position, _previousByte).GetPrice(!_state.IsCharState(), matchByte, currentByte);
+					_literalEncoder.GetSubCoder(position, _previoubyte).GetPrice(!_state.IsCharState(), matchByte, currentByte);
 			_optimum[1].MakeAsChar();
 
 			UInt32 matchPrice = _isMatch[(_state.Index << Base.kNumPosStatesBitsMax) + posState].GetPrice1();
@@ -1095,8 +1095,8 @@ namespace SevenZip.Compression.LZMA
 				_isMatch[(_state.Index << Base.kNumPosStatesBitsMax) + posState].Encode(_rangeEncoder, 0);
 				_state.UpdateChar();
 				Byte curByte = _matchFinder.GetIndexByte((Int32)(0 - _additionalOffset));
-				_literalEncoder.GetSubCoder((UInt32)(nowPos64), _previousByte).Encode(_rangeEncoder, curByte);
-				_previousByte = curByte;
+				_literalEncoder.GetSubCoder((UInt32)(nowPos64), _previoubyte).Encode(_rangeEncoder, curByte);
+				_previoubyte = curByte;
 				_additionalOffset--;
 				nowPos64++;
 			}
@@ -1116,7 +1116,7 @@ namespace SevenZip.Compression.LZMA
 				{
 					_isMatch[complexState].Encode(_rangeEncoder, 0);
 					Byte curByte = _matchFinder.GetIndexByte((Int32)(0 - _additionalOffset));
-					LiteralEncoder.Encoder2 subCoder = _literalEncoder.GetSubCoder((UInt32)nowPos64, _previousByte);
+					LiteralEncoder.Encoder2 subCoder = _literalEncoder.GetSubCoder((UInt32)nowPos64, _previoubyte);
 					if (!_state.IsCharState())
 					{
 						Byte matchByte = _matchFinder.GetIndexByte((Int32)(0 - _repDistances[0] - 1 - _additionalOffset));
@@ -1124,7 +1124,7 @@ namespace SevenZip.Compression.LZMA
 					}
 					else
 						subCoder.Encode(_rangeEncoder, curByte);
-					_previousByte = curByte;
+					_previoubyte = curByte;
 					_state.UpdateChar();
 				}
 				else
@@ -1199,7 +1199,7 @@ namespace SevenZip.Compression.LZMA
 						_repDistances[0] = distance;
 						_matchPriceCount++;
 					}
-					_previousByte = _matchFinder.GetIndexByte((Int32)(len - 1 - _additionalOffset));
+					_previoubyte = _matchFinder.GetIndexByte((Int32)(len - 1 - _additionalOffset));
 				}
 				_additionalOffset -= len;
 				nowPos64 += len;

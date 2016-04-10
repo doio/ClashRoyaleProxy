@@ -18,6 +18,7 @@ namespace ClashRoyaleProxy
         private byte[] encryptedPayload;
         private byte[] decryptedPayload;
         private DataDestination destination;
+
         public Packet(byte[] buf, DataDestination d)
         {
             // Read content
@@ -30,8 +31,8 @@ namespace ClashRoyaleProxy
             this.packetType = PacketType.GetPacketTypeByID(packetID);
 
             // En/Decrypt payload
-            this.decryptedPayload = EnDecrypt.DecryptPayload(this);
-            this.encryptedPayload = EnDecrypt.EncryptPayload(this);
+            this.decryptedPayload = EnDecrypt.DecryptPacket(this);
+            this.encryptedPayload = EnDecrypt.EncryptPacket(this);
         }
 
         /// <summary>
@@ -43,10 +44,10 @@ namespace ClashRoyaleProxy
         {
             get
             {
-               return BitConverter.GetBytes(ID).Reverse().Skip(2).Concat(BitConverter.GetBytes(EncryptedPayload.Length).Reverse().Skip(1)).Concat(BitConverter.GetBytes(MessageVersion).Reverse().Skip(2)).Concat(EncryptedPayload).ToArray();   
+                return BitConverter.GetBytes(ID).Reverse().Skip(2).Concat(BitConverter.GetBytes(EncryptedPayload.Length).Reverse().Skip(1)).Concat(BitConverter.GetBytes(MessageVersion).Reverse().Skip(2)).Concat(EncryptedPayload).ToArray();
             }
         }
-    
+
         /// <summary>
         /// Self-explaining.
         /// 10100, 20100, 10101, 20104 [...]
@@ -138,6 +139,3 @@ namespace ClashRoyaleProxy
         }
     }
 }
-
-
-

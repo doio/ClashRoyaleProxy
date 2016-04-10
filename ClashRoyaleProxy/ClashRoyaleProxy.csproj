@@ -106,9 +106,8 @@
     <Compile Include="External\LZMA\Compress\RangeCoder\RangeCoderBit.cs" />
     <Compile Include="External\LZMA\Compress\RangeCoder\RangeCoderBitTree.cs" />
     <Compile Include="External\LZMA\ICoder.cs" />
-    <Compile Include="External\TweetNaCl\TweetNaclFast.cs" />
-    <Compile Include="Helper\BinaryHelper.cs" />
-    <Compile Include="Helper\SocketHelper.cs" />
+    <Compile Include="External\TweetNaCl\TweetNacl.cs" />
+    <Compile Include="Helper\Extensions.cs" />
     <Compile Include="Logger\Logger.cs" />
     <Compile Include="Logger\LogType.cs" />
     <Compile Include="Networking\Client.cs" />
