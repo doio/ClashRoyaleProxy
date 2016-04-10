@@ -20,10 +20,9 @@ namespace ClashRoyaleProxy
             Array.Copy(plain, 0, paddedMessage, SHAREDKEYLENGTH, plainLength);
 
             var buffer = new byte[paddedMessage.Length];
-            var ret = xsalsa20poly1305.crypto_secretbox(buffer, paddedMessage, paddedMessage.Length, nonce, KnownSharedKey);
 
-            if (ret != 0)
-                throw new Exception("Failed to create SecretBox");
+            if(xsalsa20poly1305.crypto_secretbox(buffer, paddedMessage, paddedMessage.Length, nonce, KnownSharedKey) != 0)
+                throw new Exception("SecretBox Encryption failed");
 
             return buffer;
         }
@@ -32,10 +31,10 @@ namespace ClashRoyaleProxy
         {
             int cipherLength = cipher.Length;
             var buffer = new byte[cipherLength];
-            if(xsalsa20poly1305.crypto_secretbox_open(buffer, cipher, cipherLength, nonce, KnownSharedKey) != 0)
-            {
+
+            if (xsalsa20poly1305.crypto_secretbox_open(buffer, cipher, cipherLength, nonce, KnownSharedKey) != 0)
                 throw new Exception("SecretBox Decryption failed");
-            }
+
             var final = new byte[buffer.Length - SHAREDKEYLENGTH];
             Array.Copy(buffer, SHAREDKEYLENGTH, final, 0, buffer.Length - SHAREDKEYLENGTH);
             return final;
