@@ -57,6 +57,46 @@ namespace ClashRoyaleProxy
                     decrypted = NonceLoginOkFailed.Concat(SharedKeyLoginOkFailed).Concat(decrypted).ToArray();
                     encrypted = CustomNaCl.CreatePublicBox(decrypted, nonce, Keys.GeneratedPrivateKey, PKLogin);
                 }
+                else if (p.ID == 24101)
+                {
+                    // MODDING
+                    int Pos = 0;
+                    foreach (byte b in decrypted)
+                    {
+                        if (b == 0x1c && decrypted[Pos + 1] == 0x01)
+                        {
+                            // Arrows
+                            decrypted[Pos + 2] = 0x0B;
+                        }
+                        if (b == 0x1a && decrypted[Pos + 1] == 0x00)
+                        {
+                            // Knight
+                            decrypted[Pos + 2] = 0x0B;
+                        }
+                        if (b == 0x1a && decrypted[Pos + 1] == 0x01)
+                        {
+                            // Archers
+                            decrypted[Pos + 2] = 0x0B;
+                        }
+                        if (b == 0x1a && decrypted[Pos + 1] == 0x0d)
+                        {
+                            // Bomber
+                            decrypted[Pos + 2] = 0x0B;
+                        }
+                        if (b == 0x1c && decrypted[Pos + 1] == 0x00)
+                        {
+                            // Fireball
+                            decrypted[Pos + 2] = 0x09;
+                        }
+                        if (b == 0x1a && decrypted[Pos + 1] == 0x03)
+                        {
+                            // Giant
+                            decrypted[Pos + 2] = 0x09;
+                        }
+                        Pos++;
+                    }
+                    encrypted = CustomNaCl.CreateSecretBox(decrypted, NonceLoginOkFailed, SharedKeyLoginOkFailed).Skip(16).ToArray();
+                }
                 else
                 {
                     if (p.Destination == DataDestination.DATA_FROM_SERVER)
