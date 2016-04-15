@@ -71,13 +71,13 @@ namespace ClashRoyaleProxy
                             if (state.GetType() == typeof(ClientState))
                             {
                                 Packet clientPacket = new Packet(state.packet, DataDestination.DATA_FROM_CLIENT);
-                                Logger.Log(clientPacket.ID.ToString() + " | " + clientPacket.Type, LogType.CLIENT_PACKET);
+                                Logger.LogPacket(clientPacket);
                                 ServerSocket.Send(clientPacket.Raw);
                             }
                             else if (state.GetType() == typeof(ServerState))
                             {
                                 Packet serverPacket = new Packet(state.packet, DataDestination.DATA_FROM_SERVER);
-                                Logger.Log(serverPacket.ID.ToString() + " | " + serverPacket.Type, LogType.SERVER_PACKET);
+                                Logger.LogPacket(serverPacket);
                                 ClientSocket.Send(serverPacket.Raw);
                             }
                             state.packet = new byte[0];

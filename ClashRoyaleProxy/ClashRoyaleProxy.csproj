@@ -40,7 +40,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>0</WarningLevel>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -55,7 +55,7 @@
     <StartupObject>ClashRoyaleProxy.Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>Proxy.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\Proxy.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <NoWin32Manifest>true</NoWin32Manifest>
@@ -71,8 +71,7 @@
   <ItemGroup>
     <Compile Include="Crypto\EnDecrypt.cs" />
     <Compile Include="Crypto\Keys.cs" />
-    <Compile Include="External\TweetNaCl\Nonce.cs" />
-    <Compile Include="External\TweetNaCl\SecretBox.cs" />
+    <Compile Include="Crypto\CustomNaCl\SecretBox.cs" />
     <Compile Include="External\Blake2b\Blake2B.cs" />
     <Compile Include="External\Blake2b\Blake2BConfig.cs" />
     <Compile Include="External\Blake2b\Blake2BCore-FullyUnrolled.cs" />
@@ -86,7 +85,7 @@
     <Compile Include="External\Blake2b\Hasher.cs" />
     <Compile Include="External\Blake2b\NodeHasher.cs" />
     <Compile Include="External\Blake2b\TreeHasher.cs" />
-    <Compile Include="External\TweetNaCl\CustomNaCl.cs" />
+    <Compile Include="Crypto\CustomNaCl\CustomNaCl.cs" />
     <Compile Include="External\LZMA\Common\CommandLineParser.cs" />
     <Compile Include="External\LZMA\Common\CRC.cs" />
     <Compile Include="External\LZMA\Common\InBuffer.cs" />
@@ -104,16 +103,16 @@
     <Compile Include="External\LZMA\Compress\RangeCoder\RangeCoderBit.cs" />
     <Compile Include="External\LZMA\Compress\RangeCoder\RangeCoderBitTree.cs" />
     <Compile Include="External\LZMA\ICoder.cs" />
-    <Compile Include="External\TweetNaCl\Classes\curve25519.cs" />
-    <Compile Include="External\TweetNaCl\Classes\curve25519xsalsa20poly1305.cs" />
-    <Compile Include="External\TweetNaCl\Classes\hsalsa20.cs" />
-    <Compile Include="External\TweetNaCl\Classes\poly1305.cs" />
-    <Compile Include="External\TweetNaCl\Classes\salsa20.cs" />
-    <Compile Include="External\TweetNaCl\Classes\verify_16.cs" />
-    <Compile Include="External\TweetNaCl\Classes\xsalsa20.cs" />
-    <Compile Include="External\TweetNaCl\Classes\xsalsa20poly1305.cs" />
-    <Compile Include="External\TweetNaCl\KeyPair.cs" />
-    <Compile Include="External\TweetNaCl\PublicBox.cs" />
+    <Compile Include="External\TweetNaCl\curve25519.cs" />
+    <Compile Include="External\TweetNaCl\curve25519xsalsa20poly1305.cs" />
+    <Compile Include="External\TweetNaCl\hsalsa20.cs" />
+    <Compile Include="External\TweetNaCl\poly1305.cs" />
+    <Compile Include="External\TweetNaCl\salsa20.cs" />
+    <Compile Include="External\TweetNaCl\verify_16.cs" />
+    <Compile Include="External\TweetNaCl\xsalsa20.cs" />
+    <Compile Include="External\TweetNaCl\xsalsa20poly1305.cs" />
+    <Compile Include="Crypto\CustomNaCl\KeyPair.cs" />
+    <Compile Include="Crypto\CustomNaCl\PublicBox.cs" />
     <Compile Include="Helper\Extensions.cs" />
     <Compile Include="Logger\Logger.cs" />
     <Compile Include="Logger\LogType.cs" />
@@ -146,8 +145,8 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Proxy.ico" />
-    <Content Include="ToDo.txt" />
+    <Content Include="Resources\Proxy.ico" />
+    <Content Include="Resources\ToDo.txt" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5.2">
@@ -160,6 +159,9 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="UI\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Baseclass.Contrib.Nuget.Output.2.1.0\build\net40\Baseclass.Contrib.Nuget.Output.targets" Condition="Exists('..\packages\Baseclass.Contrib.Nuget.Output.2.1.0\build\net40\Baseclass.Contrib.Nuget.Output.targets')" />

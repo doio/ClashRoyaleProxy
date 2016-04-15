@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Security.Cryptography;
 
 namespace ClashRoyaleProxy
 {
@@ -60,22 +55,6 @@ namespace ClashRoyaleProxy
         public static byte[] CreateSecretBox(byte[] p, byte[] n, byte[] s)
         {
             return new SecretBox(s).create(p, n);
-        }
-
-        /// <summary>
-        /// Increments the specified nonce
-        /// </summary>
-        public static void NonceIncr(byte[] nonce)
-        {
-            new Nonce(nonce).Incremenet();
-        }
-
-        /// <summary>
-        /// Decrements the specified nonce
-        /// </summary>
-        public static void NonceDecr(byte[] nonce)
-        {
-            new Nonce(nonce).Decrement();
         }
     }
 }

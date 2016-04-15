@@ -116,7 +116,7 @@ namespace SevenZip
 			// System.Console.WriteLine("\nCommand line error\n");
 			// return 1;
 		}
-		static int Main2(string[] args)
+		static int Start(string[] args)
 		{
 			System.Console.WriteLine("\nLZMA# 4.61  2008-11-23\n");
 
@@ -344,21 +344,6 @@ namespace SevenZip
 			else
 				throw (new Exception("Command Error"));
 			return 0;
-		}
-
-		[STAThread]
-		static int Main(string[] args)
-		{
-			try
-			{
-				return Main2(args);
-			}
-			catch (Exception e)
-			{
-				Console.WriteLine("{0} Caught exception #1.", e);
-				// throw e;
-				return 1;
-			}
 		}
 	}
 }

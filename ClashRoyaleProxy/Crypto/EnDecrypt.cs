@@ -1,120 +1,95 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Blake2Sharp;
 
 namespace ClashRoyaleProxy
 {
     class EnDecrypt
     {
-        private static KeyPair ClientKeyPair = new KeyPair();
-        private static byte[] PKLogin { get; set; }
-        private static byte[] SessionKeyLogin { get; set; }
-        private static byte[] NonceLogin { get; set; }
-        private static byte[] NonceLoginOkFailed { get; set; }
-        private static byte[] SharedKeyLoginOkFailed { get; set; }
+        // Constants
+        private const int KeyLength = 32, NonceLength = 24, SessionLength = 24;
+
+        // A custom keypair used for en/decryption 
+        private static KeyPair CustomKeyPair = new KeyPair();
+
+        // The 32-byte prefixed public key from cipher 10101
+        private static byte[] _10101_PublicKey = new byte[KeyLength];
+
+        // The 24-byte prefixed session key from plain 10101
+        private static byte[] _10101_SessionKey = new byte[SessionLength];
+
+        // The 24-byte prefixed nonce from plain 10101
+        private static byte[] _10101_Nonce = new byte[NonceLength];
+
+        // The 24-byte prefixed nonce from plain 20103/20104
+        private static byte[] _20103_20104_Nonce = new byte[NonceLength];
+
+        // The 32-byte prefixed shared key from plain 20103/20104
+        private static byte[] _20103_20104_SharedKey = new byte[KeyLength];
+
+        // Default Blake2b
+        private static Hasher Blake2b = Blake2B.Create(new Blake2BConfig() { OutputSizeInBytes = 24 });
 
         /// <summary>
-        /// Encrypts a packet
+        /// Encrypts a client/server packet 
         /// </summary>
+        /// <param name="p">Packet to encrypt</param>
+        /// <returns>Encrypted payload</returns>
         public static byte[] EncryptPacket(Packet p)
         {
-            try
+            int packetID = p.ID;
+            byte[] decryptedPayload = p.DecryptedPayload;
+            byte[] encryptedPayload;
+
+            if (packetID == 10100 || packetID == 20100)
             {
-                byte[] decrypted = p.DecryptedPayload;
-                byte[] encrypted = null;
+                // Both Session (10100) and SessionOk (20100) packets are not encrypted
+                // Thus.. just return the decrypted payload
+                return decryptedPayload;
+            }
+            else if (packetID == 10101)
+            {
+                // The encrypted Login (10101) requires a nonce being calculated by the custom PK & the original PK
+                Blake2b.Init();
+                Blake2b.Update(CustomKeyPair.PublicKey);
+                Blake2b.Update(Keys.OriginalPublicKey);
+                var tmpNonce = Blake2b.Finish();
 
-                if (p.ID == 10100 || p.ID == 20100)
-                {
-                    // SessionPacket
-                    return decrypted;
-                }
-                else if (p.ID == 10101)
-                {
-                    // LoginPacket
-                    var blake2b = Blake2B.Create(new Blake2BConfig() { OutputSizeInBytes = 24 });
-                    blake2b.Init();
-                    blake2b.Update(ClientKeyPair.PublicKey);
-                    blake2b.Update(Keys.OriginalPublicKey);
-                    byte[] nonce = blake2b.Finish();
+                // The decrypted payload has to be prefixed with the nonce from plain 10101
+                decryptedPayload = _10101_SessionKey.Concat(_10101_Nonce).Concat(decryptedPayload).ToArray();
+                // Encrypt the payload with the custom NaCl 
+                encryptedPayload = CustomNaCl.CreatePublicBox(decryptedPayload, tmpNonce, CustomKeyPair.SecretKey, Keys.OriginalPublicKey);
+                // The encrypted payload has to be prefixed with the custom PK
+                encryptedPayload = CustomKeyPair.PublicKey.Concat(encryptedPayload).ToArray();
+            }
+            else if (packetID == 20103 || packetID == 20104)
+            {
+                // The encrypted LoginFailed / LoginOk (20103/20104) requires a nonce being calculated by the nonce from 10101, the PK from 10101 and the client PK            
+                Blake2b.Init();
+                Blake2b.Update(_10101_Nonce);
+                Blake2b.Update(_10101_PublicKey);
+                Blake2b.Update(Keys.ModdedPublicKey);
+                var tmpNonce = Blake2b.Finish();
 
-                    decrypted = SessionKeyLogin.Concat(NonceLogin).Concat(decrypted).ToArray();
-                    encrypted = CustomNaCl.CreatePublicBox(decrypted, nonce, ClientKeyPair.SecretKey, Keys.OriginalPublicKey);
-                    encrypted = ClientKeyPair.PublicKey.Concat(encrypted).ToArray();
-                }
-                else if (p.ID == 20103 || p.ID == 20104)
+                // The decrypted payload has to be prefixed with the nonce from 20103/20104 and the sharedkey from 20103/20104
+                decryptedPayload = _20103_20104_Nonce.Concat(_20103_20104_SharedKey).Concat(decryptedPayload).ToArray();
+                // Encrypt the payload with the custom NaCl
+                encryptedPayload = CustomNaCl.CreatePublicBox(decryptedPayload, tmpNonce, Keys.GeneratedPrivateKey, _10101_PublicKey);
+            }
+            else
+            {
+                // We're dealing with another packet. Depends whether it's a client packet or not.
+                if (p.Destination == DataDestination.DATA_FROM_CLIENT)
                 {
-                    // LoginOk / LoginFailed
-                    var blake2b = Blake2B.Create(new Blake2BConfig() { OutputSizeInBytes = 24 });
-                    blake2b.Init();
-                    blake2b.Update(NonceLogin);
-                    blake2b.Update(PKLogin);
-                    blake2b.Update(Keys.ModdedPublicKey);
-                    byte[] nonce = blake2b.Finish();
-
-                    decrypted = NonceLoginOkFailed.Concat(SharedKeyLoginOkFailed).Concat(decrypted).ToArray();
-                    encrypted = CustomNaCl.CreatePublicBox(decrypted, nonce, Keys.GeneratedPrivateKey, PKLogin);
-                }
-                else if (p.ID == 24101)
-                {
-                    // MODDING
-                    int Pos = 0;
-                    foreach (byte b in decrypted)
-                    {
-                        if (b == 0x1c && decrypted[Pos + 1] == 0x01)
-                        {
-                            // Arrows
-                            decrypted[Pos + 2] = 0x0B;
-                        }
-                        if (b == 0x1a && decrypted[Pos + 1] == 0x00)
-                        {
-                            // Knight
-                            decrypted[Pos + 2] = 0x0B;
-                        }
-                        if (b == 0x1a && decrypted[Pos + 1] == 0x01)
-                        {
-                            // Archers
-                            decrypted[Pos + 2] = 0x0B;
-                        }
-                        if (b == 0x1a && decrypted[Pos + 1] == 0x0d)
-                        {
-                            // Bomber
-                            decrypted[Pos + 2] = 0x0B;
-                        }
-                        if (b == 0x1c && decrypted[Pos + 1] == 0x00)
-                        {
-                            // Fireball
-                            decrypted[Pos + 2] = 0x09;
-                        }
-                        if (b == 0x1a && decrypted[Pos + 1] == 0x03)
-                        {
-                            // Giant
-                            decrypted[Pos + 2] = 0x09;
-                        }
-                        Pos++;
-                    }
-                    encrypted = CustomNaCl.CreateSecretBox(decrypted, NonceLoginOkFailed, SharedKeyLoginOkFailed).Skip(16).ToArray();
+                    encryptedPayload = CustomNaCl.CreateSecretBox(decryptedPayload, _10101_Nonce, _20103_20104_SharedKey).Skip(16).ToArray();
                 }
                 else
                 {
-                    if (p.Destination == DataDestination.DATA_FROM_SERVER)
-                    {
-                        encrypted = CustomNaCl.CreateSecretBox(decrypted, NonceLoginOkFailed, SharedKeyLoginOkFailed).Skip(16).ToArray();
-                    }
-                    else
-                    {
-                        encrypted = CustomNaCl.CreateSecretBox(decrypted, NonceLogin, SharedKeyLoginOkFailed).Skip(16).ToArray();
-                    }
+                    encryptedPayload = CustomNaCl.CreateSecretBox(decryptedPayload, _20103_20104_Nonce, _20103_20104_SharedKey).Skip(16).ToArray();
                 }
-                return encrypted;
             }
-            catch (Exception ex)
-            {
-                Logger.Log("Failed to encrypt packet " + p.ID + " (" + ex.GetType() + ")..", LogType.EXCEPTION);
-            }
-            return null;
+            return encryptedPayload;
         }
 
         /// <summary>
@@ -122,67 +97,60 @@ namespace ClashRoyaleProxy
         /// </summary>
         public static byte[] DecryptPacket(Packet p)
         {
-            try
+            int packetID = p.ID;
+            byte[] encryptedPayload = p.Payload;
+            byte[] decryptedPayload;
+
+            if (packetID == 10100 || packetID == 20100)
             {
-                byte[] encrypted = p.Payload;
-                byte[] decrypted = null;
+                // Both Session (10100) and SessionOk (20100) packets are not encrypted
+                // Thus.. just return the encrypted payload
+                return encryptedPayload;
+            }
+            else if (packetID == 10101)
+            {
+                // The decrypted Login (10101) requires a nonce being calculated by the PK & the modded PK
+                _10101_PublicKey = encryptedPayload.Take(32).ToArray();
+                Blake2b.Init();
+                Blake2b.Update(_10101_PublicKey);
+                Blake2b.Update(Keys.ModdedPublicKey);
+                var tmpNonce = Blake2b.Finish();
 
-                if (p.ID == 10100 || p.ID == 20100)
-                {
-                    // Both packets 10100 and 20100 are not encrypted
-                    return encrypted;
-                }
-                else if (p.ID == 10101)
-                {
-                    // LoginPacket
-                    PKLogin = encrypted.Take(32).ToArray();
-                    var blake2b = Blake2B.Create(new Blake2BConfig() { OutputSizeInBytes = 24 });
-                    blake2b.Init();
-                    blake2b.Update(PKLogin);
-                    blake2b.Update(Keys.ModdedPublicKey);
-                    byte[] nonce = blake2b.Finish();
+                // Decrypt the payload the custom NaCl
+                decryptedPayload = CustomNaCl.OpenPublicBox(encryptedPayload.Skip(32).ToArray(), tmpNonce, Keys.GeneratedPrivateKey, _10101_PublicKey);
+                _10101_SessionKey = decryptedPayload.Take(24).ToArray();
+                _10101_Nonce = decryptedPayload.Skip(24).Take(24).ToArray();
+                decryptedPayload = decryptedPayload.Skip(48).ToArray();
+            }
+            else if (packetID == 20103 || packetID == 20104)
+            {
+                // The decrypted LoginFailed / LoginOk (20103/20104) requires a nonce being calculated by the nonce from 10101, the custom PK & the original PK                   
+                Blake2b.Init();
+                Blake2b.Update(_10101_Nonce);
+                Blake2b.Update(CustomKeyPair.PublicKey);
+                Blake2b.Update(Keys.OriginalPublicKey);
+                var tmpNonce = Blake2b.Finish();
 
-                    encrypted = encrypted.Skip(32).ToArray();
-                    decrypted = CustomNaCl.OpenPublicBox(encrypted, nonce, Keys.GeneratedPrivateKey, PKLogin);
-                    SessionKeyLogin = decrypted.Take(24).ToArray();
-                    NonceLogin = decrypted.Skip(24).Take(24).ToArray();
-                    decrypted = decrypted.Skip(48).ToArray();
-                }
-                else if (p.ID == 20103 || p.ID == 20104)
+                // Decrypt the payload with the custom NaCl
+                decryptedPayload = CustomNaCl.OpenPublicBox(encryptedPayload, tmpNonce, CustomKeyPair.SecretKey, Keys.OriginalPublicKey);
+                _20103_20104_Nonce = decryptedPayload.Take(24).ToArray();
+                _20103_20104_SharedKey = decryptedPayload.Skip(24).Take(32).ToArray();
+                decryptedPayload = decryptedPayload.Skip(56).ToArray();
+            }
+            else
+            {
+                if (p.Destination == DataDestination.DATA_FROM_CLIENT)
                 {
-                    // LoginFailed / LoginOk
-                    var blake2b = Blake2B.Create(new Blake2BConfig() { OutputSizeInBytes = 24 });
-                    blake2b.Init();
-                    blake2b.Update(NonceLogin);
-                    blake2b.Update(ClientKeyPair.PublicKey);
-                    blake2b.Update(Keys.OriginalPublicKey);
-                    byte[] nonce = blake2b.Finish();
-
-                    decrypted = CustomNaCl.OpenPublicBox(encrypted, nonce, ClientKeyPair.SecretKey, Keys.OriginalPublicKey);
-                    NonceLoginOkFailed = decrypted.Take(24).ToArray();
-                    SharedKeyLoginOkFailed = decrypted.Skip(24).Take(32).ToArray();
-                    decrypted = decrypted.Skip(56).ToArray();
+                    _10101_Nonce.Increment();
+                    decryptedPayload = CustomNaCl.OpenSecretBox(new byte[16].Concat(encryptedPayload).ToArray(), _10101_Nonce, _20103_20104_SharedKey);
                 }
                 else
                 {
-                    if (p.Destination == DataDestination.DATA_FROM_SERVER)
-                    {
-                        CustomNaCl.NonceIncr(NonceLoginOkFailed);
-                        decrypted = CustomNaCl.OpenSecretBox(new byte[16].Concat(encrypted).ToArray(), NonceLoginOkFailed, SharedKeyLoginOkFailed);
-                    }
-                    else
-                    {
-                        CustomNaCl.NonceIncr(NonceLogin);
-                        decrypted = CustomNaCl.OpenSecretBox(new byte[16].Concat(encrypted).ToArray(), NonceLogin, SharedKeyLoginOkFailed);
-                    }
+                    _20103_20104_Nonce.Increment();
+                    decryptedPayload = CustomNaCl.OpenSecretBox(new byte[16].Concat(encryptedPayload).ToArray(), _20103_20104_Nonce, _20103_20104_SharedKey);
                 }
-                return decrypted;
             }
-            catch (Exception ex)
-            {
-                Logger.Log("Failed to decrypt packet " + p.ID + " (" + ex.GetType() + ")..", LogType.EXCEPTION);
-            }
-            return null;
+            return decryptedPayload;
         }
     }
 }

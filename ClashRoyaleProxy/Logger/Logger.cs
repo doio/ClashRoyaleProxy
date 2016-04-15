@@ -6,20 +6,28 @@ namespace ClashRoyaleProxy
 {
     class Logger
     {
-        public static bool FileLogging = false; // TODO: Configfile!
-
         /// <summary>
         /// Logs passed text
         /// </summary>
-        public static void Log(string text, LogType type, ConsoleColor color = ConsoleColor.Green)
+        public static void Log(string text, LogType type)
         {
             Console.ForegroundColor = (type == LogType.EXCEPTION || type == LogType.WARNING) ? ConsoleColor.Red : ConsoleColor.Green;
             Console.Write("[" + type + "] ");
             Console.ResetColor();
             Console.WriteLine(text);
+            //LogToFile(text, type);
+        }
 
-            if (FileLogging)
-                LogToFile(text, type);
+        /// <summary>
+        /// Logs passed packet
+        /// </summary>
+        public static void LogPacket(Packet p)
+        {
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.Write("[PACKET " + p.ID + "] ");
+            Console.ResetColor();
+            Console.WriteLine(p.Type);
+            //LogToFile("Packet " + p.ID + " : " + p.DecryptedPayload, type);
         }
 
         /// <summary>
