@@ -148,11 +148,6 @@ namespace ClashRoyaleProxy
                 {
                     _20103_20104_Nonce.Increment();
                     decryptedPayload = CustomNaCl.OpenSecretBox(new byte[16].Concat(encryptedPayload).ToArray(), _20103_20104_Nonce, _20103_20104_SharedKey);
-
-                    if(packetID == 24405)
-                    {
-                        System.IO.File.WriteAllBytes(@"C:\\Users\\Julian\\Desktop\\sampleTVData.json", decryptedPayload);
-                    }
                 }
             }
             return decryptedPayload;
